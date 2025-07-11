@@ -44,11 +44,12 @@ model Konto {
   brokerId     Int
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+  notes        String?
   // Relations
   broker       Broker   @relation(fields: [brokerId], references: [id])
   positionen   Position[]
   transaktionen Transaktion[]
+  dokumente    Dokument[]
 }
 
 model Position {
@@ -63,14 +64,17 @@ model Position {
   entryDate    DateTime
   fees         Float?   @default(0)
   leverage     Float?   @default(1)
+  marginPrice  Float?
+  positionValue Float?
+  annualFees   Float?
+  notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
-  
   // Relations
   konto        Konto    @relation(fields: [kontoId], references: [id])
   transaktionen Transaktion[]
-  
+  histories    PositionHistory[]
   @@index([kontoId, symbol])
 }
 
@@ -86,19 +90,22 @@ model Aktienidee {
   kursziel     Float?
   reasoning    String?
   status       String   @default("Offen") // Offen, Umgesetzt, Verworfen
+  capitalPercentage Float?
+  notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
   // Relations
   user         User     @relation(fields: [userId], references: [id])
   bewertungen  KiBewertung[]
-  
+  tranchen     Tranche[]
+  news         News[]
   @@index([userId, symbol])
 }
 
 model Alarm {
   id           Int      @id @default(autoincrement())
   userId       Int
+  positionId   Int?
   symbol       String
   name         String
   typ          String   // Preis, Prozent, Volume
@@ -109,11 +116,55 @@ model Alarm {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   ausgeloestAt DateTime?
-  
   // Relations
   user         User     @relation(fields: [userId], references: [id])
-  
+  position     Position? @relation(fields: [positionId], references: [id])
   @@index([userId, status])
+model Tranche {
+  id             Int      @id @default(autoincrement())
+  aktienideeId   Int
+  type           String   // kurz, mittel, lang
+  entryCriteria  String?
+  entryPrice     Float?
+  investedPercentage Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  // Relations
+  aktienidee     Aktienidee @relation(fields: [aktienideeId], references: [id])
+}
+model Dokument {
+  id           Int      @id @default(autoincrement())
+  kontoId      Int
+  type         String   // PDF, CSV, OCR, ...
+  filePath     String
+  importDate   DateTime @default(now())
+  status       String?
+  notes        String?
+  // Relations
+  konto        Konto    @relation(fields: [kontoId], references: [id])
+}
+model News {
+  id        Int      @id @default(autoincrement())
+  symbol    String
+  source    String
+  headline  String
+  content   String
+  date      DateTime
+  sentiment String?
+  // Relations
+  aktienideeId Int?
+  aktienidee   Aktienidee? @relation(fields: [aktienideeId], references: [id])
+}
+model PositionHistory {
+  id           Int      @id @default(autoincrement())
+  positionId   Int
+  changeType   String   // created, updated, deleted
+  changedAt    DateTime @default(now())
+  oldValue     Json?
+  newValue     Json?
+  // Relations
+  position     Position @relation(fields: [positionId], references: [id])
+}
 }
 
 model Transaktion {
