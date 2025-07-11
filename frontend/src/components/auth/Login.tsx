@@ -33,7 +33,6 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
       await login(email, password);
       navigate('/dashboard');
@@ -75,21 +74,17 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
               InvestBoard
             </Typography>
           </Box>
-          
           <Typography variant="h5" component="h2" gutterBottom>
             Anmelden
           </Typography>
-          
           <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
             Verwalten Sie Ihr Portfolio mit modernster Technologie
           </Typography>
-
           {error && (
             <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
               {error}
             </Alert>
           )}
-
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
             <TextField
               margin="normal"
@@ -130,17 +125,15 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
                 ),
               }}
             />
-            
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              disabled={isLoading}
+              disabled={isLoading || !email || !password}
               sx={{ mt: 3, mb: 2, py: 1.5 }}
             >
               {isLoading ? 'Wird angemeldet...' : 'Anmelden'}
             </Button>
-            
             <Box textAlign="center">
               <Link
                 component="button"

@@ -1,14 +1,14 @@
 import { render } from '@testing-library/react';
-import PortfolioPage from '../components/portfolio/PortfolioPage';
+import BrokerPage from '../components/broker/BrokerPage';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ToastProvider } from '../contexts/ToastContext';
 
-describe('PortfolioPage', () => {
-  it('renders without crashing', () => {
+describe('BrokerPage', () => {
+  it('renders without crashing (API gemockt)', () => {
     const { container } = render(
       <AuthProvider>
         <ToastProvider>
-          <PortfolioPage />
+          <BrokerPage />
         </ToastProvider>
       </AuthProvider>
     );

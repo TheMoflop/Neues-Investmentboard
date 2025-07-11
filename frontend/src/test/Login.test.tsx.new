@@ -1,0 +1,10 @@
+import { customRender } from './test-utils';
+import Login from '../components/auth/Login';
+import { vi } from 'vitest';
+
+describe('Login', () => {
+  it('renders without crashing', () => {
+    const { container } = customRender(<Login onSwitchToRegister={vi.fn()} />);
+    expect(container).toBeTruthy();
+  });
+});

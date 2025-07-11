@@ -19,6 +19,7 @@ import Sidebar from './components/common/Sidebar';
 import { TrendingUp, Logout, Menu } from '@mui/icons-material';
 
 const drawerWidth = 240;
+const basename = process.env.NODE_ENV === 'production' ? '/Neues-Investmentboard' : '';
 
 const AppBarComponent: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -169,7 +170,7 @@ const App: React.FC = () => {
     <CustomThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <Router>
+          <Router basename={basename}>
             <AppContent />
           </Router>
         </AuthProvider>

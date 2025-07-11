@@ -1,3 +1,27 @@
+// Axios global mock
+import axios from 'axios';
+vi.mock('axios', () => {
+  const mockApi = {
+    get: vi.fn(() => Promise.resolve({ data: {} })),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
+    put: vi.fn(() => Promise.resolve({ data: {} })),
+    delete: vi.fn(() => Promise.resolve({ data: {} })),
+    interceptors: {
+      request: {
+        use: vi.fn(),
+      },
+      response: {
+        use: vi.fn(),
+      },
+    },
+  };
+  return {
+    default: {
+      ...mockApi,
+      create: vi.fn(() => mockApi),
+    },
+  };
+});
 // Globaler Mock für Material-UI Icons
 import { vi } from 'vitest';
 vi.mock('@mui/icons-material', () => ({
