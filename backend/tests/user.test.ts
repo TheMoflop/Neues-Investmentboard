@@ -4,7 +4,7 @@ import request from 'supertest';
 
 describe('User API', () => {
   const testUser = {
-    email: 'apitest@example.com',
+    email: `apitest${Date.now()}@example.com`,
     password: 'Test12345!',
     name: 'API Tester'
   };

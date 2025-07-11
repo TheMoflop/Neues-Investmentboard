@@ -6,8 +6,14 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))'
+  ],
+  extensionsToTreatAsEsm: [],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   globals: {
     'ts-jest': {
+      useESM: false,
       tsconfig: 'tsconfig.json',
     },
   },
