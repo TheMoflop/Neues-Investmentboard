@@ -1,5 +1,21 @@
+// Globaler Mock für Material-UI Icons
+import { vi } from 'vitest';
+vi.mock('@mui/icons-material', () => ({
+  TrendingUp: () => null,
+  Logout: () => null,
+  Menu: () => null,
+  SettingsInputComponentOutlined: () => null,
+  Dashboard: () => null,
+  DashboardIcon: () => null,
+  AccountBalance: () => null,
+  Assessment: () => null,
+  Person: () => null,
+  Settings: () => null,
+  Visibility: () => null,
+  VisibilityOff: () => null,
+  // Weitere Icons nach Bedarf ergänzen
+}));
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
 
 // Mock localStorage
 const localStorageMock = {

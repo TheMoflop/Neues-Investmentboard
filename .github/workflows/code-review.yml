@@ -1,0 +1,78 @@
+name: Code Review
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Needed for SonarCloud
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Run linting
+      working-directory: frontend
+      run: npm run lint
+    
+    - name: Run tests with coverage
+      working-directory: frontend
+      run: npm run test:coverage
+    
+    - name: Comment PR with test results
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const fs = require('fs');
+          const path = './frontend/coverage/coverage-summary.json';
+          
+          if (fs.existsSync(path)) {
+            const coverage = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const total = coverage.total;
+            
+            const comment = `## 📊 Test Coverage Report
+            
+            | Metric | Percentage | Lines |
+            |--------|------------|-------|
+            | Statements | ${total.statements.pct}% | ${total.statements.covered}/${total.statements.total} |
+            | Branches | ${total.branches.pct}% | ${total.branches.covered}/${total.branches.total} |
+            | Functions | ${total.functions.pct}% | ${total.functions.covered}/${total.functions.total} |
+            | Lines | ${total.lines.pct}% | ${total.lines.covered}/${total.lines.total} |
+            
+            📝 **Status**: ${total.lines.pct >= 80 ? '✅ Coverage target met!' : '⚠️ Coverage below 80%'}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          }
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security audit
+      working-directory: frontend
+      run: npm audit --audit-level moderate
+    
+    - name: Check for vulnerabilities
+      working-directory: frontend
+      run: npm audit --audit-level high --dry-run
