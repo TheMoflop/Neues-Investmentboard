@@ -7,7 +7,7 @@ export interface AuthRequest extends Request {
 
 export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Token fehlt oder ist ungültig.' });
   }
 
@@ -19,6 +19,7 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('[authenticateJWT] Fehler beim Token-Check:', error);
     return res.status(401).json({ error: 'Token ungültig oder abgelaufen.' });
   }
 };
