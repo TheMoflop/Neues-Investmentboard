@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
 // Import types for proper TypeScript support
 import './vitest-setup.d.ts';
@@ -96,23 +96,35 @@ global.cancelAnimationFrame = vi.fn().mockImplementation((id) => {
   clearTimeout(id);
 });
 
-// Mock localStorage and sessionStorage
-const createStorageMock = () => ({
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  key: vi.fn(),
-  length: 0,
-});
+
+// Stateful localStorage/sessionStorage mocks
+function createStatefulStorageMock() {
+  let store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => (key in store ? store[key] : null)),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+    key: vi.fn((index: number) => Object.keys(store)[index] || null),
+    get length() {
+      return Object.keys(store).length;
+    },
+  };
+}
 
 Object.defineProperty(window, 'localStorage', {
-  value: createStorageMock(),
+  value: createStatefulStorageMock(),
   writable: true,
 });
 
 Object.defineProperty(window, 'sessionStorage', {
-  value: createStorageMock(),
+  value: createStatefulStorageMock(),
   writable: true,
 });
 
@@ -159,72 +171,9 @@ vi.mock('react-router-dom', async () => {
       search: '',
       hash: '',
       state: null,
+
       key: 'default',
     }),
-    useParams: () => ({}),
   };
 });
 
-/**
- * API Service mocks
- */
-vi.mock('../services/apiService', () => ({
-  apiService: {
-    login: vi.fn(),
-    register: vi.fn(),
-    getBrokers: vi.fn(),
-    getKontos: vi.fn(),
-    getPositions: vi.fn(),
-    // Add other API methods as needed
-  },
-}));
-
-/**
- * Context mocks
- */
-vi.mock('../contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: null,
-    token: null,
-    isLoading: false,
-    isAuthenticated: false,
-    login: vi.fn(),
-    register: vi.fn(),
-    logout: vi.fn(),
-  }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
-vi.mock('../contexts/ToastContext', () => ({
-  useToast: () => ({
-    showToast: vi.fn(),
-    hideToast: vi.fn(),
-    toasts: [],
-  }),
-  ToastProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
-/**
- * Material-UI Icon mocks to prevent file system overload
- */
-vi.mock('@mui/icons-material', () => ({
-  Visibility: () => 'div',
-  VisibilityOff: () => 'div',
-  TrendingUp: () => 'div',
-  Dashboard: () => 'div',
-  Person: () => 'div',
-  Settings: () => 'div',
-  ExitToApp: () => 'div',
-  Add: () => 'div',
-  Edit: () => 'div',
-  Delete: () => 'div',
-  // Add other icons as needed
-}));
-
-vi.mock('../contexts/ThemeContext', () => ({
-  useTheme: () => ({
-    theme: 'light',
-    toggleTheme: vi.fn(),
-  }),
-  CustomThemeProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
