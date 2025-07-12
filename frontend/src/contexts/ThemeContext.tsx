@@ -18,7 +18,7 @@ interface ThemeContextType {
   setTheme: (mode: ThemeMode) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 /**
  * Hook to access theme context
@@ -80,6 +80,8 @@ export const CustomThemeProvider: React.FC<ThemeProviderProps> = ({ children }) 
 
   // Create theme based on current mode
   const theme = useMemo(() => createAppTheme(mode), [mode]);
+  // Export theme for external usage (e.g. in test-utils)
+  (window as any).__testTheme = theme;
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({

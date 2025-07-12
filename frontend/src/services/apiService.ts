@@ -19,7 +19,7 @@ import type {
  * Handles authentication, error handling, and request/response interceptors
  */
 class ApiService {
-  private api: AxiosInstance;
+  private readonly api: AxiosInstance;
   private authToken: string | null = null;
 
   constructor() {
@@ -58,7 +58,7 @@ class ApiService {
           localStorage.removeItem('user');
           window.location.href = '/login';
         }
-        return Promise.reject(error);
+        return Promise.reject(error instanceof Error ? error : new Error(String(error)));
       }
     );
   }

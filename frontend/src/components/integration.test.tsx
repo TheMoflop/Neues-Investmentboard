@@ -1,12 +1,12 @@
-import { screen } from '@testing-library/react'
+/// <reference types="@testing-library/jest-dom/vitest" />
+import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { customRender } from '../test/test-utils'
 
 // Integration tests for all major components working together
 describe('Component Integration Tests', () => {
   describe('Button and Typography Integration', () => {
     it('should render button with proper styling', () => {
-      customRender(
+      render(
         <div>
           <h5>Test Heading</h5>
           <p>Test description text</p>
@@ -20,7 +20,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should handle multiple components', () => {
-      customRender(
+      render(
         <div>
           <div data-testid="icon">📊</div>
           <h5>Portfolio Management</h5>
@@ -35,7 +35,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should work with theme context', () => {
-      const { container } = customRender(
+      const { container } = render(
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span>Themed content</span>
         </div>
@@ -46,7 +46,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should handle accessibility features', () => {
-      customRender(
+      render(
         <div>
           <h5>Accessible Heading</h5>
           <button type="button" aria-label="Accessible Button">Click me</button>
@@ -61,7 +61,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should support various button variants', () => {
-      customRender(
+      render(
         <div>
           <button type="button" className="MuiButton-contained">Contained</button>
           <button type="button" className="MuiButton-outlined">Outlined</button>
@@ -75,7 +75,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should render complex layouts', () => {
-      const { container } = customRender(
+      const { container } = render(
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -95,7 +95,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should handle text content properly', () => {
-      customRender(
+      render(
         <div>
           <h5>Investment Dashboard</h5>
           <p>Track your portfolio performance and manage investments efficiently.</p>
@@ -109,7 +109,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should support different HTML elements', () => {
-      customRender(
+      render(
         <div>
           <header>Header Content</header>
           <main>Main Content</main>
@@ -123,7 +123,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should work with data attributes', () => {
-      customRender(
+      render(
         <div>
           <div data-testid="portfolio-section">Portfolio Section</div>
           <div data-testid="broker-section">Broker Section</div>
@@ -137,7 +137,7 @@ describe('Component Integration Tests', () => {
     })
 
     it('should handle empty states pattern', () => {
-      customRender(
+      render(
         <div>
           <div>📊</div>
           <h5>No Data Available</h5>

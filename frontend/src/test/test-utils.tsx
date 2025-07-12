@@ -1,80 +1,45 @@
-import React from 'react'
-import { render } from '@testing-library/react'
-import type { RenderOptions } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from '../contexts/AuthContext'
-import { CustomThemeProvider } from '../contexts/ThemeContext'
-import { ToastProvider } from '../contexts/ToastContext'
-import type { ReactElement } from 'react'
+import React from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
+import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { vi } from 'vitest';
+
+// Import types
+import type { User, AuthResponse } from '../types/api';
 
 /**
- * Custom render function that includes all providers
- * Useful for testing components that need context
+ * Test theme for consistent styling in tests
  */
-const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <CustomThemeProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            {children}
-          </BrowserRouter>
-        </AuthProvider>
-      </ToastProvider>
-    </CustomThemeProvider>
-  )
-}
+const testTheme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
 
 /**
- * Custom render with all providers
- * @param ui - Component to render
- * @param options - Render options
- * @returns Render result with all providers
+ * Mock implementations for all contexts
  */
-const customRender = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) => render(ui, { wrapper: AllTheProviders, ...options })
+export const mockAuthContext = {
+  user: null as User | null,
+  token: null as string | null,
+  isLoading: false,
+  isAuthenticated: false,
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn(),
+};
 
-/**
- * Render component with Auth context only
- * @param ui - Component to render
- * @param options - Render options
- * @returns Render result with Auth context
- */
-const renderWithAuth = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) => {
-  const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <CustomThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          {children}
-        </BrowserRouter>
-      </AuthProvider>
-    </CustomThemeProvider>
-  )
-  return render(ui, { wrapper: AuthWrapper, ...options })
-}
-
-/**
- * Render component with Theme context only
- * @param ui - Component to render
- * @param options - Render options
- * @returns Render result with Theme context
- */
-const renderWithTheme = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) => {
-  const ThemeWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <CustomThemeProvider>
-      {children}
-    </CustomThemeProvider>
-  )
-  return render(ui, { wrapper: ThemeWrapper, ...options })
-}
+export const mockToastContext = {
+  showToast: vi.fn(),
+  hideToast: vi.fn(),
+  toasts: [],
+};
 
 /**
  * Mock API responses for testing
@@ -90,7 +55,16 @@ export const mockApiResponses = {
       updatedAt: '2025-01-01T00:00:00.000Z',
     },
     token: 'mock-jwt-token'
-  },
+  } as AuthResponse,
+
+  // Mock user data
+  user: {
+    id: 1,
+    name: 'Test User',
+    email: 'test@example.com',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
+  } as User,
 
   // Mock broker data
   brokers: [
@@ -125,32 +99,192 @@ export const mockApiResponses = {
     message: 'Test error message',
     status: 400
   }
+};
+
+/**
+ * Provider configuration for testing
+ */
+interface TestProvidersProps {
+  children: React.ReactNode;
+  routerProps?: Partial<MemoryRouterProps>;
+  authContext?: Partial<typeof mockAuthContext>;
+  toastContext?: Partial<typeof mockToastContext>;
 }
 
 /**
- * Mock localStorage for testing
+ * Test Providers Component
+ * Provides all necessary context providers for testing
  */
-export const mockLocalStorage = {
-  setItem: (key: string, value: string) => {
-    window.localStorage.setItem(key, value)
-  },
-  getItem: (key: string) => {
-    return window.localStorage.getItem(key)
-  },
-  removeItem: (key: string) => {
-    window.localStorage.removeItem(key)
-  },
-  clear: () => {
-    window.localStorage.clear()
-  }
+export const TestProviders: React.FC<TestProvidersProps> = ({
+  children,
+  routerProps = {},
+  authContext = {},
+  toastContext = {},
+}) => {
+  // Merge provided context values with defaults
+  const authValue = { ...mockAuthContext, ...authContext };
+  const toastValue = { ...mockToastContext, ...toastContext };
+
+  return (
+    <MemoryRouter initialEntries={['/login']} {...routerProps}>
+      <ThemeProvider theme={testTheme}>
+        {/* Mock AuthContext */}
+        <div data-testid="mock-auth-context" data-auth={JSON.stringify(authValue)}>
+          {/* Mock ToastContext */}
+          <div data-testid="mock-toast-context" data-toast={JSON.stringify(toastValue)}>
+            {children}
+          </div>
+        </div>
+      </ThemeProvider>
+    </MemoryRouter>
+  );
+};
+
+/**
+ * Custom render options
+ */
+interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  routerProps?: Partial<MemoryRouterProps>;
+  authContext?: Partial<typeof mockAuthContext>;
+  toastContext?: Partial<typeof mockToastContext>;
 }
 
 /**
- * Wait for async operations to complete
- * Useful for testing async state updates
+ * Custom render function with all providers
  */
-export const waitForAsync = () => new Promise(resolve => setTimeout(resolve, 0))
+export const renderWithProviders = (
+  ui: React.ReactElement,
+  options: CustomRenderOptions = {}
+) => {
+  const {
+    routerProps,
+    authContext,
+    toastContext,
+    ...renderOptions
+  } = options;
 
-// Re-export everything
-export * from '@testing-library/react'
-export { customRender, customRender as render, renderWithAuth, renderWithTheme }
+  const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <TestProviders
+      routerProps={routerProps}
+      authContext={authContext}
+      toastContext={toastContext}
+    >
+      {children}
+    </TestProviders>
+  );
+
+  return render(ui, { wrapper: Wrapper, ...renderOptions });
+};
+
+/**
+ * Utility functions for testing
+ */
+export const testUtils = {
+  /**
+   * Wait for async operations to complete
+   */
+  waitForAsync: () => new Promise(resolve => setTimeout(resolve, 0)),
+
+  /**
+   * Mock localStorage for testing
+   */
+  mockLocalStorage: {
+    setItem: vi.fn(),
+    getItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  },
+
+  /**
+   * Reset all mocks to initial state
+   */
+  resetMocks: () => {
+    vi.clearAllMocks();
+    mockAuthContext.user = null;
+    mockAuthContext.token = null;
+    mockAuthContext.isLoading = false;
+    mockAuthContext.isAuthenticated = false;
+  },
+
+  /**
+   * Set authenticated user for testing
+   */
+  setAuthenticatedUser: (user: User, token: string = 'mock-token') => {
+    mockAuthContext.user = user;
+    mockAuthContext.token = token;
+    mockAuthContext.isAuthenticated = true;
+  },
+
+  /**
+   * Set loading state for auth
+   */
+  setAuthLoading: (loading: boolean) => {
+    mockAuthContext.isLoading = loading;
+  },
+};
+
+/**
+ * Common test scenarios
+ */
+export const testScenarios = {
+  /**
+   * Render component as authenticated user
+   */
+  renderAsAuthenticatedUser: (ui: React.ReactElement, options: CustomRenderOptions = {}) => {
+    const authContext = {
+      ...mockAuthContext,
+      user: mockApiResponses.user,
+      token: mockApiResponses.loginSuccess.token,
+      isAuthenticated: true,
+      ...options.authContext,
+    };
+
+    return renderWithProviders(ui, {
+      ...options,
+      authContext,
+    });
+  },
+
+  /**
+   * Render component as unauthenticated user
+   */
+  renderAsUnauthenticatedUser: (ui: React.ReactElement, options: CustomRenderOptions = {}) => {
+    const authContext = {
+      ...mockAuthContext,
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      ...options.authContext,
+    };
+
+    return renderWithProviders(ui, {
+      ...options,
+      authContext,
+    });
+  },
+
+  /**
+   * Render component with loading state
+   */
+  renderWithLoadingState: (ui: React.ReactElement, options: CustomRenderOptions = {}) => {
+    const authContext = {
+      ...mockAuthContext,
+      isLoading: true,
+      ...options.authContext,
+    };
+
+    return renderWithProviders(ui, {
+      ...options,
+      authContext,
+    });
+  },
+};
+
+// Re-export everything from testing library
+export * from '@testing-library/react';
+export { renderWithProviders as render };
+
+// Export common testing utilities
+export { vi } from 'vitest';
+export { waitFor, fireEvent, screen } from '@testing-library/react';
+export { userEvent } from '@testing-library/user-event';

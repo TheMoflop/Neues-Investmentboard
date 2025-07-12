@@ -1,12 +1,11 @@
-import { screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { Loading, CardSkeleton, ListSkeleton } from './Loading'
-import { customRender } from '../../test/test-utils'
 
 describe('Loading Components', () => {
   describe('CardSkeleton', () => {
     it('should render card skeleton correctly', () => {
-      const { container } = customRender(<CardSkeleton />)
+      const { container } = render(<CardSkeleton />)
       
       // Should contain skeleton elements
       const skeletons = container.querySelectorAll('.MuiSkeleton-root')
@@ -14,14 +13,14 @@ describe('Loading Components', () => {
     })
 
     it('should have proper card structure', () => {
-      const { container } = customRender(<CardSkeleton />)
+      const { container } = render(<CardSkeleton />)
       
       const card = container.querySelector('.MuiCard-root')
       expect(card).toBeInTheDocument()
     })
 
     it('should render custom number of lines', () => {
-      const { container } = customRender(<CardSkeleton lines={5} />)
+      const { container } = render(<CardSkeleton lines={5} />)
       
       // Should have 1 title + 5 lines
       const textSkeletons = container.querySelectorAll('.MuiSkeleton-text')
@@ -31,21 +30,21 @@ describe('Loading Components', () => {
 
   describe('ListSkeleton', () => {
     it('should render list skeleton with default items', () => {
-      const { container } = customRender(<ListSkeleton />)
+      const { container } = render(<ListSkeleton />)
       
       const cards = container.querySelectorAll('.MuiCard-root')
       expect(cards.length).toBe(5) // Default items
     })
 
     it('should render list skeleton with custom items', () => {
-      const { container } = customRender(<ListSkeleton items={3} />)
+      const { container } = render(<ListSkeleton items={3} />)
       
       const cards = container.querySelectorAll('.MuiCard-root')
       expect(cards.length).toBe(3)
     })
 
     it('should contain avatars and text in each item', () => {
-      const { container } = customRender(<ListSkeleton items={2} />)
+      const { container } = render(<ListSkeleton items={2} />)
       
       const circularSkeletons = container.querySelectorAll('.MuiSkeleton-circular')
       const textSkeletons = container.querySelectorAll('.MuiSkeleton-text')
@@ -55,7 +54,7 @@ describe('Loading Components', () => {
     })
 
     it('should handle zero items gracefully', () => {
-      const { container } = customRender(<ListSkeleton items={0} />)
+      const { container } = render(<ListSkeleton items={0} />)
       
       const cards = container.querySelectorAll('.MuiCard-root')
       expect(cards.length).toBe(0)
@@ -64,20 +63,20 @@ describe('Loading Components', () => {
 
   describe('Main Loading Component', () => {
     it('should render loading spinner with default message', () => {
-      customRender(<Loading />)
+      render(<Loading />)
       
       expect(screen.getByText('Wird geladen...')).toBeInTheDocument()
       expect(screen.getByRole('progressbar')).toBeInTheDocument()
     })
 
     it('should render custom message', () => {
-      customRender(<Loading message="Custom loading message" />)
+      render(<Loading message="Custom loading message" />)
       
       expect(screen.getByText('Custom loading message')).toBeInTheDocument()
     })
 
     it('should render with custom size', () => {
-      const { container } = customRender(<Loading size={60} />)
+      const { container } = render(<Loading size={60} />)
       
       const progressbar = container.querySelector('.MuiCircularProgress-root')
       expect(progressbar).toBeInTheDocument()
@@ -85,7 +84,7 @@ describe('Loading Components', () => {
 
     it('should apply custom styling', () => {
       const customSx = { backgroundColor: 'red' }
-      const { container } = customRender(<Loading sx={customSx} />)
+      const { container } = render(<Loading sx={customSx} />)
       
       const loadingContainer = container.firstChild as HTMLElement
       expect(loadingContainer).toHaveStyle('background-color: rgb(255, 0, 0)')
@@ -94,14 +93,14 @@ describe('Loading Components', () => {
 
   describe('Animation and Accessibility', () => {
     it('should have skeleton animation', () => {
-      const { container } = customRender(<CardSkeleton />)
+      const { container } = render(<CardSkeleton />)
       
       const skeleton = container.querySelector('.MuiSkeleton-root')
       expect(skeleton).toHaveClass('MuiSkeleton-pulse')
     })
 
     it('should be accessible for screen readers', () => {
-      customRender(<Loading />)
+      render(<Loading />)
       
       // Loading component should have progressbar role
       const progressbar = screen.getByRole('progressbar')
@@ -111,14 +110,14 @@ describe('Loading Components', () => {
 
   describe('Theme Integration', () => {
     it('should work with theme context', () => {
-      const { container } = customRender(<Loading />)
+      const { container } = render(<Loading />)
       
       const skeleton = container.querySelector('.MuiCircularProgress-root')
       expect(skeleton).toBeInTheDocument()
     })
 
     it('should render skeleton components with theme', () => {
-      const { container } = customRender(<CardSkeleton />)
+      const { container } = render(<CardSkeleton />)
       
       const skeleton = container.querySelector('.MuiSkeleton-root')
       expect(skeleton).toBeInTheDocument()
@@ -128,24 +127,24 @@ describe('Loading Components', () => {
   describe('Component Props', () => {
     it('should handle edge case item values for ListSkeleton', () => {
       // Very large count
-      const { container: largeContainer } = customRender(<ListSkeleton items={10} />)
+      const { container: largeContainer } = render(<ListSkeleton items={10} />)
       const largeListItems = largeContainer.querySelectorAll('.MuiCard-root')
       expect(largeListItems.length).toBe(10)
 
       // Zero count
-      const { container: zeroContainer } = customRender(<ListSkeleton items={0} />)
+      const { container: zeroContainer } = render(<ListSkeleton items={0} />)
       const zeroListItems = zeroContainer.querySelectorAll('.MuiCard-root')
       expect(zeroListItems.length).toBe(0)
     })
 
     it('should handle edge case line values for CardSkeleton', () => {
       // Many lines
-      const { container: manyLinesContainer } = customRender(<CardSkeleton lines={10} />)
+      const { container: manyLinesContainer } = render(<CardSkeleton lines={10} />)
       const textSkeletons = manyLinesContainer.querySelectorAll('.MuiSkeleton-text')
       expect(textSkeletons.length).toBeGreaterThanOrEqual(10)
 
       // Zero lines (should still have title)
-      const { container: zeroLinesContainer } = customRender(<CardSkeleton lines={0} />)
+      const { container: zeroLinesContainer } = render(<CardSkeleton lines={0} />)
       const titleSkeleton = zeroLinesContainer.querySelector('.MuiSkeleton-text')
       expect(titleSkeleton).toBeInTheDocument()
     })

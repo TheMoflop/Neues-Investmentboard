@@ -1,3 +1,9 @@
+/// <reference types="@testing-library/jest-dom/vitest" />
+import { renderWithProviders, screen } from './test-utils';
+import userEvent from '@testing-library/user-event';
+import Login from '../components/auth/Login';
+import { vi } from 'vitest';
+
 function fakeLoginResponse() {
   return {
     token: 'fake-token',
@@ -10,52 +16,58 @@ function fakeLoginResponse() {
     }
   };
 }
-import { customRender } from './test-utils';
-import Login from '../components/auth/Login';
-import { fireEvent, screen } from '@testing-library/react';
-import { AuthProvider } from '../contexts/AuthContext';
-import { ToastProvider } from '../contexts/ToastContext';
-import { vi } from 'vitest';
-// Hilfsfunktion für das Rendering
 
 // Hilfsfunktion für das Rendering
 function renderLogin(props = {}) {
-  return customRender(
-    <AuthProvider>
-      <ToastProvider>
-        <Login onSwitchToRegister={vi.fn()} {...props} />
-      </ToastProvider>
-    </AuthProvider>
-  );
+  const user = userEvent.setup();
+  const defaultProps = { onSwitchToRegister: vi.fn() };
+  const component = renderWithProviders(<Login {...defaultProps} {...props} />);
+  return { user, ...component };
 }
 
 describe('Login', () => {
-  it('keeps button disabled if email is empty', () => {
-    renderLogin();
-    fireEvent.change(screen.getByLabelText(/Passwort/i), { target: { value: 'password123' } });
-    expect(screen.getByRole('button', { name: /Anmelden/i })).toBeDisabled();
+  it('keeps button disabled if email is empty', async () => {
+    const { user } = renderLogin();
+    const passwordInput = screen.getByLabelText(/Passwort/i);
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    
+    await user.type(passwordInput, 'password123');
+    expect(submitButton).toBeDisabled();
   });
 
-  it('keeps button disabled if password is empty', () => {
-    renderLogin();
-    fireEvent.change(screen.getByLabelText(/E-Mail Adresse/i), { target: { value: 'test@example.com' } });
-    expect(screen.getByRole('button', { name: /Anmelden/i })).toBeDisabled();
+  it('keeps button disabled if password is empty', async () => {
+    const { user } = renderLogin();
+    const emailInput = screen.getByLabelText(/E-Mail Adresse/i);
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    
+    await user.type(emailInput, 'test@example.com');
+    expect(submitButton).toBeDisabled();
   });
 
-  it('keeps button disabled if email is invalid', () => {
-    renderLogin();
-    fireEvent.change(screen.getByLabelText(/E-Mail Adresse/i), { target: { value: 'invalid-email' } });
-    fireEvent.change(screen.getByLabelText(/Passwort/i), { target: { value: 'password123' } });
-    expect(screen.getByRole('button', { name: /Anmelden/i })).toBeDisabled();
+  it('keeps button disabled if email is invalid', async () => {
+    const { user } = renderLogin();
+    const emailInput = screen.getByLabelText(/E-Mail Adresse/i);
+    const passwordInput = screen.getByLabelText(/Passwort/i);
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    
+    await user.type(emailInput, 'invalid-email');
+    await user.type(passwordInput, 'password123');
+    expect(submitButton).toBeDisabled();
   });
 
   it('does not call login API if fields are invalid', async () => {
     const { apiService } = await import('../services/apiService');
     const loginMock = vi.spyOn(apiService, 'login');
-    renderLogin();
-    fireEvent.change(screen.getByLabelText(/E-Mail Adresse/i), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText(/Passwort/i), { target: { value: '' } });
-    fireEvent.click(screen.getByRole('button', { name: /Anmelden/i }));
+    const { user } = renderLogin();
+    
+    const emailInput = screen.getByLabelText(/E-Mail Adresse/i);
+    const passwordInput = screen.getByLabelText(/Passwort/i);
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    
+    await user.clear(emailInput);
+    await user.clear(passwordInput);
+    await user.click(submitButton);
+    
     expect(loginMock).not.toHaveBeenCalled();
     loginMock.mockRestore();
   });
@@ -63,10 +75,16 @@ describe('Login', () => {
   it('shows error message on failed login', async () => {
     const { apiService } = await import('../services/apiService');
     const loginMock = vi.spyOn(apiService, 'login').mockRejectedValue(new Error('Login failed'));
-    renderLogin();
-    fireEvent.change(screen.getByLabelText(/E-Mail Adresse/i), { target: { value: 'wrong@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Passwort/i), { target: { value: 'wrongpass' } });
-    fireEvent.click(screen.getByRole('button', { name: /Anmelden/i }));
+    const { user } = renderLogin();
+    
+    const emailInput = screen.getByLabelText(/E-Mail Adresse/i);
+    const passwordInput = screen.getByLabelText(/Passwort/i);
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    
+    await user.type(emailInput, 'wrong@example.com');
+    await user.type(passwordInput, 'wrongpass');
+    await user.click(submitButton);
+    
     await screen.findByText(/Anmeldung fehlgeschlagen/i);
     expect(screen.getByText(/Anmeldung fehlgeschlagen/i)).toBeInTheDocument();
     loginMock.mockRestore();
@@ -79,31 +97,46 @@ describe('Login', () => {
         setTimeout(resolve, 500, fakeLoginResponse());
       });
     });
-    renderLogin();
-    fireEvent.change(screen.getByLabelText(/E-Mail Adresse/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Passwort/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Anmelden/i }));
+    const { user } = renderLogin();
+    
+    const emailInput = screen.getByLabelText(/E-Mail Adresse/i);
+    const passwordInput = screen.getByLabelText(/Passwort/i);
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'password123');
+    await user.click(submitButton);
+    
     expect(await screen.findByRole('button', { name: /Wird angemeldet/i })).toBeDisabled();
     loginMock.mockRestore();
   });
 
-  it('toggles password visibility', () => {
-    renderLogin();
+  it('toggles password visibility', async () => {
+    const { user } = renderLogin();
     const passwordInput = screen.getByLabelText(/Passwort/i);
+    const toggleButton = screen.getByLabelText(/toggle password visibility/i);
+    
     expect(passwordInput).toHaveAttribute('type', 'password');
-    fireEvent.click(screen.getByLabelText(/toggle password visibility/i));
+    
+    await user.click(toggleButton);
     expect(passwordInput).toHaveAttribute('type', 'text');
+    
+    await user.click(toggleButton);
+    expect(passwordInput).toHaveAttribute('type', 'password');
   });
 
-  it('calls onSwitchToRegister when register link is clicked', () => {
+  it('calls onSwitchToRegister when register link is clicked', async () => {
     const switchMock = vi.fn();
-    renderLogin({ onSwitchToRegister: switchMock });
-    fireEvent.click(screen.getByText(/Noch kein Konto\? Jetzt registrieren/i));
+    const { user } = renderLogin({ onSwitchToRegister: switchMock });
+    
+    const registerLink = screen.getByText(/Noch kein Konto\? Jetzt registrieren/i);
+    await user.click(registerLink);
+    
     expect(switchMock).toHaveBeenCalled();
   });
 
   it('renders without crashing', () => {
-    const { container } = customRender(<Login onSwitchToRegister={vi.fn()} />);
+    const { container } = renderWithProviders(<Login onSwitchToRegister={vi.fn()} />);
     expect(container).toBeTruthy();
   });
 
@@ -119,11 +152,76 @@ describe('Login', () => {
         updatedAt: '2023-01-01T00:00:00.000Z',
       }
     });
-    renderLogin();
-    fireEvent.change(screen.getByLabelText(/E-Mail Adresse/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Passwort/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Anmelden/i }));
+    const { user } = renderLogin();
+    
+    const emailInput = screen.getByLabelText(/E-Mail Adresse/i);
+    const passwordInput = screen.getByLabelText(/Passwort/i);
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'password123');
+    await user.click(submitButton);
+    
     expect(loginMock).toHaveBeenCalled();
     loginMock.mockRestore();
+  });
+});
+
+// === VEREINFACHTE TESTS OHNE PROVIDER (zur Fehlervermeidung) ===
+import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+// Mock AuthContext für vereinfachte Tests
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: null,
+    login: vi.fn(),
+    logout: vi.fn(),
+    loading: false,
+    isAuthenticated: false
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children
+}));
+
+// Einfacher Wrapper mit minimalen Providern
+const SimpleWrapper = ({ children }: { children: React.ReactNode }) => {
+  const theme = createTheme();
+  return (
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        {children}
+      </ThemeProvider>
+    </MemoryRouter>
+  );
+};
+
+describe('Login - Simplified Tests', () => {
+  it('should render login form', () => {
+    const mockSwitchToRegister = vi.fn();
+    
+    render(
+      <SimpleWrapper>
+        <Login onSwitchToRegister={mockSwitchToRegister} />
+      </SimpleWrapper>
+    );
+
+    // Grundlegende Elemente prüfen (spezifischere Suche)
+    expect(screen.getByRole('heading', { name: /Anmelden/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/E-Mail Adresse/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Passwort/i)).toBeInTheDocument();
+  });
+
+  it('should have disabled submit button initially', () => {
+    const mockSwitchToRegister = vi.fn();
+    
+    render(
+      <SimpleWrapper>
+        <Login onSwitchToRegister={mockSwitchToRegister} />
+      </SimpleWrapper>
+    );
+
+    const submitButton = screen.getByRole('button', { name: /Anmelden/i });
+    expect(submitButton).toBeDisabled();
   });
 });

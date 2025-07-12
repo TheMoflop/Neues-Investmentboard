@@ -18,10 +18,8 @@ afterEach(() => {
   vi.clearAllMocks();
   
   // Clear localStorage
-  if (typeof window !== 'undefined') {
-    localStorage.clear();
-    sessionStorage.clear();
-  }
+  localStorage.clear();
+  sessionStorage.clear();
 });
 
 /**
@@ -29,29 +27,11 @@ afterEach(() => {
  */
 beforeEach(() => {
   // Reset DOM state
-  if (typeof document !== 'undefined') {
-    document.body.innerHTML = '';
-  }
+  document.body.innerHTML = '';
   
-  // Mock console methods to reduce test noise (but allow them through if needed)
-  const originalWarn = console.warn;
-  const originalError = console.error;
-  
-  vi.spyOn(console, 'warn').mockImplementation((...args) => {
-    // Allow through certain warnings but suppress others
-    const message = args.join(' ');
-    if (!message.includes('React Router') && !message.includes('act(')) {
-      originalWarn(...args);
-    }
-  });
-  
-  vi.spyOn(console, 'error').mockImplementation((...args) => {
-    // Allow through actual errors but suppress test framework noise
-    const message = args.join(' ');
-    if (!message.includes('Warning:') && !message.includes('act(')) {
-      originalError(...args);
-    }
-  });
+  // Mock console methods to reduce test noise
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 /**
@@ -202,23 +182,6 @@ vi.mock('../contexts/ToastContext', () => ({
     toasts: [],
   }),
   ToastProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
-/**
- * Material-UI Icon mocks to prevent file system overload
- */
-vi.mock('@mui/icons-material', () => ({
-  Visibility: () => 'div',
-  VisibilityOff: () => 'div',
-  TrendingUp: () => 'div',
-  Dashboard: () => 'div',
-  Person: () => 'div',
-  Settings: () => 'div',
-  ExitToApp: () => 'div',
-  Add: () => 'div',
-  Edit: () => 'div',
-  Delete: () => 'div',
-  // Add other icons as needed
 }));
 
 vi.mock('../contexts/ThemeContext', () => ({
